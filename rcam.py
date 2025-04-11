@@ -1,36 +1,42 @@
 import numpy as np
 from numpy import deg2rad
-from scipy.constants import g
+from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation
 
 
-def dcm(phi, theta, psi):
+def dcm(phi: float, theta: float, psi: float) -> ArrayLike:
+    """Direction cosine matrix from Euler angles
+
+    Args:
+        phi (float): rotation 3 about X''
+        theta (float): rotation 2 about Y'
+        psi (float): rotation 1 about Z
+
+    Returns:
+        ArrayLike: direction cosine matrix
+    """
     return Rotation.from_euler("ZYX", [psi, theta, phi]).as_matrix()
 
 
-def RCAM_model(x, u):
-    """
-    RCAM aircraft model.
+def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
+    """RCAM plant dynamics
 
     Args:
-        x (numpy.ndarray): State vector.
-                           If length is 9: [u, v, w, p, q, r, phi, theta, psi]
-                           If length is 12: [u, v, w, p, q, r, phi, theta, psi, PN, PE, PD]
-        u (numpy.ndarray): Control vector [d_A, d_T, d_R, d_th1, d_th2]
+        x (ArrayLike): plant state vector [u, v, w, p, q, r, phi, theta, psi, PN, PE, PD]
+        u (ArrayLike): plant control vector [d_A, d_T, d_R, d_th1, d_th2]
 
     Returns:
-        numpy.ndarray: Time derivative of the state vector xDot.
-
-    All inputs are in SI base units. Angles are in radians.
+        ArrayLike: plant state time derivative
     """
     # Constants
+    g = 9.81  # gravitational acceleration
     rho = 1.225  # air density at sea level
     n = 5.5  # lift curve slope
     alpha_L0 = deg2rad(-11.5)  # zero lift AOA
     a0 = 15.212  # wing body stall regime model
-    a1 = -155.2  # \
-    a2 = 609.2  #  } stall model coefficients
-    a3 = -768.5  # /
+    a1 = -155.2  # stall model coefficients
+    a2 = 609.2  # ^
+    a3 = -768.5  # ^
     l_t = 24.8  # tail distance
     depsilondalpha = 0.25  # downwash model
     S = 260  # wing area
@@ -52,12 +58,6 @@ def RCAM_model(x, u):
         [x[3], x[4], x[5]]
     )  # rotation w.r.t. earth in body frame
     V_b = np.array([x[0], x[1], x[2]])  # velocity in body frame
-
-    ## CONTROL SATURATION LIMITS -----------------------------------------------
-    u_min = deg2rad(np.array([-25, -25, -30, 0.5, 0.5]))
-    u_max = deg2rad(np.array([25, 10, 30, 1, 1]))
-    u[u < u_min] = u_min[u < u_min]
-    u[u > u_max] = u_max[u > u_max]
 
     ## AERODYNAMIC FORCES ------------------------------------------------------
 
@@ -165,15 +165,15 @@ def RCAM_model(x, u):
 
     ## FIRST-ORDER EXPLICIT SYSTEM ---------------------------------------------
 
-    xDot = np.zeros(len(x))
+    x_dot = np.zeros(len(x))
 
     # Linear Acceleration
     F_b = F_gb + F_Eb + F_Ab  # total forces in body frame
-    xDot[0:3] = (1 / m) * F_b - np.cross(omega_beb, V_b)
+    x_dot[0:3] = (1 / m) * F_b - np.cross(omega_beb, V_b)
 
     # Rotational Acceleration
     M_cgb = M_Ecgb + M_Acgb  # total moments in body frame
-    xDot[3:6] = np.linalg.solve(
+    x_dot[3:6] = np.linalg.solve(
         I_b, (M_cgb - np.cross(omega_beb, (I_b @ omega_beb)))
     )
 
@@ -187,7 +187,7 @@ def RCAM_model(x, u):
             [0, np.sin(phi) / np.cos(theta), np.cos(phi) / np.cos(theta)],
         ]
     )  # Euler rate from body rate transform
-    xDot[6:9] = ERmat @ x[3:6]
+    x_dot[6:9] = ERmat @ x[3:6]
 
     ## APPEND NORTH-EAST-DOWN POSITION RATES -----------------------------------
 
@@ -197,6 +197,51 @@ def RCAM_model(x, u):
         C_vb = dcm(phi, theta, psi)
 
         # Transform u,v,w to V_NED
-        xDot[9:12] = C_vb @ x[0:3]
+        x_dot[9:12] = C_vb @ x[0:3]
 
-    return xDot
+    return x_dot
+
+
+def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
+    """RCAM actuator dynamics
+
+    Args:
+        x (ArrayLike): actuator state vector [lag_A, lag_T, lag_R, lag_th1, lag_th2]
+        u (ArrayLike): actuator control vector [d_A, d_T, d_R, d_th1, d_th2]
+
+    Returns:
+        ArrayLike: actuator control output
+        ArrayLike: actuator state time derivative
+
+    Reference: Section 2.5
+    """
+    # Rate limits
+    # TODO: implement approximate rate limits using 2nd-order butterworth filter
+
+    # Lag dynamics
+    lags = 1 / np.array([0.15, 0.15, 0.3, 1.5, 1.5])
+    x_dot = -np.diag(lags) @ x + u
+    y = np.diag(lags) @ x
+
+    # Saturation limits
+    y_min = np.array([-deg2rad(25), -deg2rad(25), -deg2rad(30), 0.5, 0.5])
+    y_max = np.array([deg2rad(25), deg2rad(10), deg2rad(30), 1.0, 1.0])
+    y[y > y_max] = y_max[y > y_max]
+    y[y < y_min] = y_min[y < y_min]
+
+    return y, x_dot
+
+
+def rcam_system(x: ArrayLike, u: ArrayLike) -> ArrayLike:
+    """RCAM system dynamics
+
+    Args:
+        x (ArrayLike): system state vector
+        u (ArrayLike): system control vector
+
+    Returns:
+        ArrayLike: system state time derivative
+    """
+    y_act, x_dot_act = rcam_actuators(x[-5:], u)
+    x_dot_plant = rcam_plant(x[:12], y_act)
+    return np.concatenate((x_dot_plant, x_dot_act))
