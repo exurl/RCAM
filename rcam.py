@@ -34,9 +34,9 @@ def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
     n = 5.5  # lift curve slope
     alpha_L0 = deg2rad(-11.5)  # zero lift AOA
     a0 = 15.212  # wing body stall regime model
-    a1 = -155.2  # stall model coefficients
-    a2 = 609.2  # ^
-    a3 = -768.5  # ^
+    a1 = -155.2  # stall model coefficient
+    a2 = 609.2  # stall model coefficient
+    a3 = -768.5  # stall model coefficient
     l_t = 24.8  # tail distance
     depsilondalpha = 0.25  # downwash model
     S = 260  # wing area
@@ -206,7 +206,7 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     """RCAM actuator dynamics
 
     Args:
-        x (ArrayLike): actuator state vector [lag_A, lag_T, lag_R, lag_th1, lag_th2]
+        x (ArrayLike): actuator state vector [lag_A, lag_T, lag_R, lag_th1, lag_th2, lead_th1_1, lead_th1_2, lead_th2_1, lead_th2_2]
         u (ArrayLike): actuator control vector [d_A, d_T, d_R, d_th1, d_th2]
 
     Returns:
@@ -215,13 +215,20 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
 
     Reference: Section 2.5
     """
-    # Rate limits
-    # TODO: implement approximate rate limits using 2nd-order butterworth filter
+    x_lag = x[:5]
+    x_lead = x[5:]
+
+    # Rate limit (2nd-order Butterworth filter approximation)
+    A = np.array([[-4.9635, -12.3166], [1, 0]])
+    A_block = np.block([[A, np.zeros((2, 2))], [np.zeros((2, 2)), A]])
+    B_block = np.array([[0, 0], [12.3166, 0], [0, 0], [0, 12.3166]])
+    x_dot_lead = A_block @ x_lead + B_block @ u[-2:]
+    y_lead = 12.3166 * x_lead[[1, 3]]
 
     # Lag dynamics
     lags = 1 / np.array([0.15, 0.15, 0.3, 1.5, 1.5])
-    x_dot = -np.diag(lags) @ x + u
-    y = np.diag(lags) @ x
+    x_dot_lag = -lags * x_lag + y_lead
+    y = lags * x_lag
 
     # Saturation limits
     y_min = np.array([-deg2rad(25), -deg2rad(25), -deg2rad(30), 0.5, 0.5])
@@ -229,7 +236,7 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     y[y > y_max] = y_max[y > y_max]
     y[y < y_min] = y_min[y < y_min]
 
-    return y, x_dot
+    return y, np.concatenate(x_dot_lag, x_dot_lead)
 
 
 def rcam_system(x: ArrayLike, u: ArrayLike) -> ArrayLike:
