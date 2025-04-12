@@ -25,6 +25,25 @@ def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
         x (ArrayLike): plant state vector [u, v, w, p, q, r, phi, theta, psi, PN, PE, PD]
         u (ArrayLike): plant control vector [d_A, d_T, d_R, d_th1, d_th2]
 
+    Definitions:
+        u: body frame velocity components (m/s)
+        v: body frame velocity components (m/s)
+        w: body frame velocity components (m/s)
+        p: body frame roll rate (rad/s)
+        q: body frame pitch rate (rad/s)
+        r: body frame yaw rate (rad/s)
+        phi: roll angle (Euler angle) (rad)
+        theta: pitch angle (Euler angle) (rad)
+        psi: yaw angle (Euler angle) (rad)
+        PN: north position (m)
+        PE: east position (m)
+        PD: down position (m)
+        d_A: aileron deflection (rad)
+        d_T: tailplane deflection (rad)
+        d_R: rudder deflection (rad)
+        d_th1: throttle position of engine 1 (rad)
+        d_th2: throttle position of engine 2 (rad)
+
     Returns:
         ArrayLike: plant state time derivative
     """
