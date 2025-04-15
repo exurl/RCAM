@@ -16,12 +16,9 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
     """
     x0 = xu[:12]  # Aircraft state vector
     u0 = xu[12:]  # Control input vector
-
-    # Evaluate plant dynamics at given state and input
-    x_dot = rcam_plant(x0, u0)
-
-    # Cost is primarily the norm of the dynamics (steady state => x_dot ≈ 0)
-    cost = np.linalg.norm(x_dot)**2
+    
+    # Cost is primarily the norm of roll/pitch/yaw rate
+    cost = np.linalg.norm(x0[3:6])**2
 
     # Additional cost terms for optional constraints
     u, v, w = x0[0:3]  # Body frame velocities
@@ -31,8 +28,10 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
     beta = np.arcsin(v / V_A) if V_A != 0 else 0.0  # Sideslip angle
 
     # Penalize non-zero sideslip for coordinated flight
-    if constraints.get("coordinated_flight", False):
-        cost += 100.0 * beta**2
+    cost += 100.0 * beta**2
+
+    # Penalize split (differential) throttle inputs
+    cost += 100.0 * (u0[3] - u0[4])**2
 
     # Penalize deviation from desired airspeed
     if "airspeed" in constraints:
@@ -58,7 +57,6 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
         cost += 10.0 * (phi - phi_target) ** 2
 
     return cost
-
 
 def trim_rcam(
     x0: np.ndarray,
