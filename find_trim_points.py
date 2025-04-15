@@ -4,8 +4,8 @@ from trim import *
 # Initial guess for the state and control vectors (rough estimate)
 x0_guess = np.zeros(12)
 u0_guess = np.zeros(5)
-u0_guess[3] = np.deg2rad(5.0)  # throttle position of engine 1 setting
-u0_guess[4] = np.deg2rad(5.0)  # throttle position of engine 2 setting
+u0_guess[3] = 0.75  # throttle position of engine 1 setting
+u0_guess[4] = 0.75  # throttle position of engine 2 setting
 
 trim_cases = [
     # Straight and level at 80 m/s and 1000 m altitude
@@ -20,19 +20,19 @@ trim_cases = [
         "airspeed": 180.0,
         "altitude": 10000.0
     },
-    # Coordinated turn at 60 m/s with 30 degree bank
+    # Coordinated turn at 60 m/s with 10 degree bank
     {
-        "name": "BankedTurn_60ms_30deg",
+        "name": "BankedTurn_60ms_10deg",
         "airspeed": 60.0,
         "altitude": 1000.0,
-        "bank_angle": np.deg2rad(30)
+        "bank_angle": np.deg2rad(10)
     },
-    # Coordinated turn at 80 m/s with 45 degree bank
+    # Coordinated turn at 80 m/s with 30 degree bank
     {
-        "name": "BankedTurn_80ms_45deg",
+        "name": "BankedTurn_80ms_30deg",
         "airspeed": 80.0,
         "altitude": 2000.0,
-        "bank_angle": np.deg2rad(45)
+        "bank_angle": np.deg2rad(30)
     }
 ]
 
@@ -50,6 +50,9 @@ for case in trim_cases:
         print(f"x_trim = {result['x_trim']}")
         print(f"u_trim = {result['u_trim']}")
         print(f"Cost = {result['cost']:.4e}")
+        
+        x_dot = rcam_plant(result['x_trim'], result['u_trim'])
+        print(f"x_dot = {x_dot}")
     else:
         print(f"Trim failed for {case['name']}")
         print(result['result'].message)
