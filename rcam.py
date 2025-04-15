@@ -224,6 +224,7 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     B_block = np.array([[0, 0], [12.3166, 0], [0, 0], [0, 12.3166]])
     x_dot_lead = A_block @ x_lead + B_block @ u[-2:]
     y_lead = 12.3166 * x_lead[[1, 3]]
+    y_lead = np.concatenate((np.zeros(3), y_lead))
 
     # Lag dynamics
     lags = 1 / np.array([0.15, 0.15, 0.3, 1.5, 1.5])
@@ -236,7 +237,7 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     y[y > y_max] = y_max[y > y_max]
     y[y < y_min] = y_min[y < y_min]
 
-    return y, np.concatenate(x_dot_lag, x_dot_lead)
+    return y, np.concatenate((x_dot_lag, x_dot_lead))
 
 
 def rcam_system(x: ArrayLike, u: ArrayLike) -> ArrayLike:
@@ -249,6 +250,6 @@ def rcam_system(x: ArrayLike, u: ArrayLike) -> ArrayLike:
     Returns:
         ArrayLike: system state time derivative
     """
-    y_act, x_dot_act = rcam_actuators(x[-5:], u)
+    y_act, x_dot_act = rcam_actuators(x[12:], u)
     x_dot_plant = rcam_plant(x[:12], y_act)
     return np.concatenate((x_dot_plant, x_dot_act))
