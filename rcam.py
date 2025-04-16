@@ -26,9 +26,9 @@ def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
         u (ArrayLike): plant control vector [d_A, d_T, d_R, d_th1, d_th2]
 
     Definitions:
-        u: body frame velocity components (m/s)
-        v: body frame velocity components (m/s)
-        w: body frame velocity components (m/s)
+        u: body frame velocity component - forward (m/s)
+        v: body frame velocity components - lateral (m/s)
+        w: body frame velocity components - vertical (m/s)
         p: body frame roll rate (rad/s)
         q: body frame pitch rate (rad/s)
         r: body frame yaw rate (rad/s)
@@ -251,8 +251,8 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     y = lags * x_lag
 
     # Saturation limits
-    y_min = np.array([-deg2rad(25), -deg2rad(25), -deg2rad(30), 0.5, 0.5])
-    y_max = np.array([deg2rad(25), deg2rad(10), deg2rad(30), 1.0, 1.0])
+    y_min = np.array([-deg2rad(25), -deg2rad(25), -deg2rad(30), deg2rad(0.5), deg2rad(0.5)])
+    y_max = np.array([deg2rad(25), deg2rad(10), deg2rad(30), deg2rad(10), deg2rad(10)])
     y[y > y_max] = y_max[y > y_max]
     y[y < y_min] = y_min[y < y_min]
 

@@ -34,26 +34,26 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
     beta = np.arcsin(v / V_A) if V_A != 0 else 0.0  # Sideslip angle
 
     # Penalize non-zero sideslip for coordinated flight
-    cost += 100.0 * beta**2
+    cost += 10.0 * beta**2
 
     # Penalize split (differential) throttle inputs
     cost += 100.0 * (u0[3] - u0[4])**2
 
     # Penalize control inputs exceeding saturation limits
     if u0[0] < -deg2rad(25) or u0[0] > deg2rad(25):
-        cost += 100.0 * (u0[0] - np.clip(u0[0], -deg2rad(25), deg2rad(25)))**2
+        cost += 1000.0 * (u0[0] - np.clip(u0[0], -deg2rad(25), deg2rad(25)))**2
     if u0[1] < -deg2rad(25) or u0[1] > deg2rad(10):
-        cost += 100.0 * (u0[1] - np.clip(u0[1], -deg2rad(25), deg2rad(10)))**2
+        cost += 1000.0 * (u0[1] - np.clip(u0[1], -deg2rad(25), deg2rad(10)))**2
     if u0[2] < -deg2rad(30) or u0[2] > deg2rad(30):
-        cost += 100.0 * (u0[2] - np.clip(u0[2], -deg2rad(30), deg2rad(30)))**2
-    if u0[3] < 0.5 or u0[3] > 1.0:
-        cost += 100.0 * (u0[3] - np.clip(u0[3], 0.5, 1.0))**2
-    if u0[4] < 0.5 or u0[4] > 1.0:
-        cost += 100.0 * (u0[4] - np.clip(u0[4], 0.5, 1.0))**2
+        cost += 1000.0 * (u0[2] - np.clip(u0[2], -deg2rad(30), deg2rad(30)))**2
+    if u0[3] < deg2rad(0.5) or u0[3] > deg2rad(10):
+        cost += 1000.0 * (u0[3] - np.clip(u0[3], deg2rad(0.5), deg2rad(10)))**2
+    if u0[4] < deg2rad(0.5) or u0[4] > deg2rad(10):
+        cost += 1000.0 * (u0[4] - np.clip(u0[4], deg2rad(0.5), deg2rad(10)))**2
     
-    # Penalize high angle of attack
-    if alpha > deg2rad(12):
-        cost += 10 * (alpha - deg2rad(12))**2
+    # # Penalize high angle of attack
+    # if alpha > deg2rad(12):
+    #     cost += 10 * (alpha - deg2rad(12))**2
 
     # Penalize deviation from desired airspeed
     if "airspeed" in constraints:

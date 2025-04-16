@@ -4,8 +4,8 @@ from trim import *
 # Initial guess for the state and control vectors (rough estimate)
 x0_guess = np.zeros(12)
 u0_guess = np.zeros(5)
-u0_guess[3] = 0.75  # throttle position of engine 1 setting
-u0_guess[4] = 0.75  # throttle position of engine 2 setting
+u0_guess[3] = deg2rad(5.25)  # throttle position of engine 1 setting
+u0_guess[4] = deg2rad(5.25)  # throttle position of engine 2 setting
 
 trim_cases = [
     # Straight and level at 80 m/s and 1000 m altitude
@@ -14,16 +14,16 @@ trim_cases = [
         "airspeed": 80.0,
         "altitude": 1000.0
     },
-    # Straight and level at 180 m/s and 10000 m altitude
+    # Straight and level at 120 m/s and 10000 m altitude
     {
-        "name": "StraightLevel_180ms_10000m",
-        "airspeed": 180.0,
+        "name": "StraightLevel_120ms_10000m",
+        "airspeed": 120.0,
         "altitude": 10000.0
     },
-    # Coordinated turn at 60 m/s with 10 degree bank
+    # Coordinated turn at 70 m/s with 10 degree bank
     {
-        "name": "BankedTurn_60ms_10deg",
-        "airspeed": 60.0,
+        "name": "BankedTurn_70ms_10deg",
+        "airspeed": 70.0,
         "altitude": 1000.0,
         "bank_angle": np.deg2rad(10)
     },
@@ -33,6 +33,13 @@ trim_cases = [
         "airspeed": 80.0,
         "altitude": 2000.0,
         "bank_angle": np.deg2rad(30)
+    },
+    # Constant descent with 3 deg flight path angle
+    {
+        "name": "Descent_80ms_3deg_fltpath",
+        "airspeed": 80.0,
+        "altitude": 2000.0,
+        "flight_path_angle": -np.deg2rad(3)
     }
 ]
 
