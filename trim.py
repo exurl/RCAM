@@ -19,12 +19,16 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
 
     # Evaluate plant dynamics at given state and input
     x_dot = rcam_plant(x0, u0)
+
+    # Define weights for the cost function
+    x_dot_weights = np.array([1, 1, 1, np.rad2deg(1), np.rad2deg(1), np.rad2deg(1), np.rad2deg(1), np.rad2deg(1), np.rad2deg(1)])
     
     # Cost is primarily the norm of the dynamics (steady state => x_dot ≈ 0)
     if "flight_path_angle" in constraints:
-        cost = np.linalg.norm(x_dot[:9])**2
+        cost = x_dot[:9] @ np.diag(x_dot_weights) @ x_dot[:9]
     else:
-        cost = np.linalg.norm(np.concatenate((x_dot[:9], [x_dot[11]])))**2
+        x_dot_weights = np.concatenate((x_dot_weights, np.array([1])))
+        cost = np.concatenate((x_dot[:9], [x_dot[11]])) @ np.diag(x_dot_weights) @ np.concatenate((x_dot[:9], [x_dot[11]]))
 
     # Additional cost terms for optional constraints
     u, v, w = x0[0:3]  # Body frame velocities
@@ -50,10 +54,6 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
         cost += 1000.0 * (u0[3] - np.clip(u0[3], deg2rad(0.5), deg2rad(10)))**2
     if u0[4] < deg2rad(0.5) or u0[4] > deg2rad(10):
         cost += 1000.0 * (u0[4] - np.clip(u0[4], deg2rad(0.5), deg2rad(10)))**2
-    
-    # # Penalize high angle of attack
-    # if alpha > deg2rad(12):
-    #     cost += 10 * (alpha - deg2rad(12))**2
 
     # Penalize deviation from desired airspeed
     if "airspeed" in constraints:
@@ -63,8 +63,7 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
     # Penalize deviation from desired flight path angle
     if "flight_path_angle" in constraints:
         gamma = constraints["flight_path_angle"]
-        v_ned = dcm(phi, theta, psi) @ np.array([u, v, w])
-        gamma_actual = np.arctan2(-v_ned[2], np.linalg.norm(v_ned[:2]))
+        gamma_actual = theta - alpha
         cost += 10.0 * (gamma - gamma_actual) ** 2
 
     # Penalize deviation from desired altitude
@@ -76,7 +75,7 @@ def trim_cost(xu: np.ndarray, constraints: Dict[str, Any]) -> float:
     # Penalize deviation from desired bank angle
     if "bank_angle" in constraints:
         phi_target = constraints["bank_angle"]
-        cost += 10.0 * (phi - phi_target) ** 2
+        cost += 30.0 * (phi - phi_target) ** 2
 
     return cost
 
