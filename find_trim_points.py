@@ -1,6 +1,7 @@
 import numpy as np
 from trim import *
 from compute_trajectory import simulate_trajectory
+import matplotlib.pyplot as plt
 
 # Initial guess for the state and control vectors (rough estimate)
 x0_guess = np.zeros(12)
@@ -94,7 +95,6 @@ for case in trim_cases:
         )
         
         # Plot array of state variables
-        import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(10, 6))
         fig.suptitle(f"Trajectory for {case['name']}", fontsize=16)
         plt.subplot(3, 3, 1)
