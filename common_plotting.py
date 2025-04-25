@@ -64,3 +64,103 @@ def plot_control_inputs(profile, title):
     plt.show()
 
     return
+
+# Function to plot time history of RCAM state variables
+def plot_state_variables(t, x, title):
+    """
+    Plot the 9 aircraft state variables over time in a 3x3 grid of subplots.
+
+    Parameters:
+    -----------
+    t : array-like
+        Time vector (in seconds).
+    x : array-like
+        State variable matrix of shape (n_samples, 12), where columns represent:
+        [u, v, w, p, q, r, phi, theta, psi, PN, PE, PD]
+        Velocities are in m/s, angular rates in rad/s, and angles in radians.
+    title : str
+        Title for the entire figure.
+    
+    Returns:
+    --------
+    None
+        Displays a matplotlib figure with nine subplots.
+
+    Notes:
+    ------
+    - Angular rate variables (p, q, r) and angles (phi, theta, psi) are converted to degrees.
+    - The plot is arranged in a 3x3 grid with gridlines and axis labels.
+    """
+    fig, axs = plt.subplots(3, 3, figsize=(10, 6))
+    fig.suptitle(title, fontsize=16)
+
+    labels = [
+        ("u (forward velocity)", "Velocity (m/s)", x[:, 0]),
+        ("v (lateral velocity)", "Velocity (m/s)", x[:, 1]),
+        ("w (vertical velocity)", "Velocity (m/s)", x[:, 2]),
+        ("p (roll rate)", "Angular Velocity (deg/s)", np.rad2deg(x[:, 3])),
+        ("q (pitch rate)", "Angular Velocity (deg/s)", np.rad2deg(x[:, 4])),
+        ("r (yaw rate)", "Angular Velocity (deg/s)", np.rad2deg(x[:, 5])),
+        ("phi (roll angle)", "Angle (deg)", np.rad2deg(x[:, 6])),
+        ("theta (pitch angle)", "Angle (deg)", np.rad2deg(x[:, 7])),
+        ("psi (yaw angle)", "Angle (deg)", np.rad2deg(x[:, 8])),
+    ]
+
+    for i, ax in enumerate(axs.flat):
+        title_i, ylabel_i, data_i = labels[i]
+        ax.plot(t, data_i)
+        ax.set_title(title_i)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel(ylabel_i)
+        ax.grid(True)
+
+    fig.tight_layout(pad=1.0, w_pad=0.5, h_pad=0.5, rect=[0, 0, 1, 0.95])
+    plt.show()
+
+# Function to plot top-down and side views of aircraft trajectory
+def plot_trajectory(t, x, title):
+    """
+    Plots the aircraft trajectory in two subplots: a top-down view of the trajectory
+    and the altitude over time.
+
+    Parameters:
+    -----------
+    t : array-like
+        A 1D array representing the time values (in seconds).
+    x : array-like
+        State variable matrix of shape (n_samples, 12), where columns represent:
+        [u, v, w, p, q, r, phi, theta, psi, PN (north position), PE (east position), PD (down position)]
+        Positions are in meters from the origin.
+    title : str
+        The title of the plot.
+
+    Returns:
+    --------
+    None
+        Displays a matplotlib figure with two subplots.
+
+    Notes:
+    ------
+    - The first subplot shows the top-down view of the trajectory (PE vs PN) with equal axis scaling.
+    - The second subplot shows the altitude (in meters) as a function of time.
+    """
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+    fig.suptitle(title, fontsize=16)
+
+    # Top-down view
+    ax[0].plot(x[:, 9], x[:, 10], label='Trajectory (PE vs PN)')
+    ax[0].set_title("Top-down View of Trajectory")
+    ax[0].set_xlabel("PN (North Position)")
+    ax[0].set_ylabel("PE (East Position)")
+    ax[0].axis('equal')
+    ax[0].grid(True)
+
+    # Altitude over time
+    ax[1].plot(t, -x[:, 11], label='Altitude (m)')
+    ax[1].set_title("Altitude")
+    ax[1].set_xlabel("Time (s)")
+    ax[1].set_ylabel("Altitude (m)")
+    ax[1].grid(True)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
