@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+from common_plotting import plot_control_inputs
 
 # ==== USER-SPECIFIED VALUES ====
 # Path to the Excel file containing control input profiles
@@ -216,45 +217,11 @@ np.savez("control_profiles.npz", **control_profiles)
 
 # ==== PLOT CONTROL INPUT PROFILES ====
 
-# Function to plot a control input profile
-def plot_profile(profile_id, profile):
-    fig, axes = plt.subplots(5, 1, figsize=(10, 12), sharex=True)
+# Customize how many profiles you want to plot
+profile_keys = list(control_profiles.keys())[132:]  # Plot specific profiles
 
-    # Set overall figure title
-    fig.suptitle(f"Control Input Profile: {profile_id}", fontsize=16)
-
-    # Define input names and titles for the plots
-    input_names = ["d_A", "d_T", "d_R", "d_th1", "d_th2"]
-    titles = ["d_A (aileron)", "d_T (tailplane)", "d_R (rudder)", "d_th1 (throttle 1)", "d_th2 (throttle 2)"]
-
-    # Plot each control variable
-    for i, ax in enumerate(axes):
-        input_col = i + 1  # Column index for the control variable
-        var = input_names[i]  # Variable name
-
-        # Plot the profile and saturation limits
-        ax.plot(profile[:, 0], profile[:, input_col], label=titles[i])
-        ax.axhline(saturation_limits[var][0], color='k', linestyle='--')  # Lower limit
-        ax.axhline(saturation_limits[var][1], color='k', linestyle='--')  # Upper limit
-
-        ax.legend(loc="upper right")
-        ax.grid(True)
-
-    # Common x and y labels
-    axes[-1].set_xlabel("Time (s)", fontsize=12)
-    fig.text(0.05, 0.5, "Deflection from trim (rad)", va='center', rotation='vertical', fontsize=12)
-
-    # Adjust layout and show the plot
-    plt.tight_layout(rect=[0.05, 0.05, 1, 0.95])  # Adjust for space around the y-label and suptitle
-    plt.xlim([0, profile[-1, 0]])
-    plt.show()
-
-    return
-
-# # Customize how many profiles you want to plot
-# profile_keys = list(control_profiles.keys())[132:]  # Plot specific profiles
-
-# # Plot each selected profile
-# for profile_id in profile_keys:
-#     profile = control_profiles[profile_id]
-#     plot_profile(profile_id, profile)
+# Plot each selected profile
+for profile_id in profile_keys:
+    profile = control_profiles[profile_id]
+    plot_title = f"Control Input Profile: {profile_id}"
+    plot_control_inputs(profile, plot_title)
