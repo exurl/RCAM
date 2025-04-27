@@ -32,11 +32,6 @@ def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
         p: body frame roll rate (rad/s)
         q: body frame pitch rate (rad/s)
         r: body frame yaw rate (rad/s)
-        phi: roll angle (Euler angle) (rad)
-        theta: pitch angle (Euler angle) (rad)
-        psi: yaw angle (Euler angle) (rad)
-        PN: north position (m)
-        PE: east position (m)
         PD: down position (m)
         d_A: aileron deflection (rad)
         d_T: tailplane deflection (rad)
@@ -77,6 +72,16 @@ def rcam_plant(x: ArrayLike, u: ArrayLike) -> ArrayLike:
         [x[3], x[4], x[5]]
     )  # rotation w.r.t. earth in body frame
     V_b = np.array([x[0], x[1], x[2]])  # velocity in body frame
+
+    ## CONTROL SATURATION LIMITS -----------------------------------------------
+    u_min = np.array(
+        [-deg2rad(25), -deg2rad(25), -deg2rad(30), deg2rad(0.5), deg2rad(0.5)]
+    )
+    u_max = np.array(
+        [deg2rad(25), deg2rad(10), deg2rad(30), deg2rad(10), deg2rad(10)]
+    )
+    u[u > u_max] = u_max[u > u_max]
+    u[u < u_min] = u_min[u < u_min]
 
     ## AERODYNAMIC FORCES ------------------------------------------------------
 
@@ -251,8 +256,12 @@ def rcam_actuators(x: ArrayLike, u: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     y = lags * x_lag
 
     # Saturation limits
-    y_min = np.array([-deg2rad(25), -deg2rad(25), -deg2rad(30), deg2rad(0.5), deg2rad(0.5)])
-    y_max = np.array([deg2rad(25), deg2rad(10), deg2rad(30), deg2rad(10), deg2rad(10)])
+    y_min = np.array(
+        [-deg2rad(25), -deg2rad(25), -deg2rad(30), deg2rad(0.5), deg2rad(0.5)]
+    )
+    y_max = np.array(
+        [deg2rad(25), deg2rad(10), deg2rad(30), deg2rad(10), deg2rad(10)]
+    )
     y[y > y_max] = y_max[y > y_max]
     y[y < y_min] = y_min[y < y_min]
 
