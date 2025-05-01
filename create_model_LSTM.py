@@ -90,7 +90,7 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     all_train_loss = []
     all_train_accuracy = []
 
-    num_epochs = 2  # Set number of training epochs
+    num_epochs = 30  # Set number of training epochs
 
     for epoch in tqdm(range(num_epochs)):
         
