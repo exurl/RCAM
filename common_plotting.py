@@ -372,3 +372,77 @@ def plot_yaw(t, x, u, title):
     plt.show()
 
     return
+
+# Function to plot comparison of model-predicted and true control inputs
+def plot_predicted_vs_true(t, u_pred, u_true, title):
+    """
+    Plots the model-predicted control inputs against the true control inputs over time.
+
+    Parameters:
+    -----------
+    t : array-like
+        A 1D array representing the time values (in seconds).
+    u_pred : array-like
+        Model-predicted control input matrix of shape (n_samples, 5), where columns represent:
+        [d_A (aileron), d_T (tailplane), d_R (rudder), d_th1 (throttle 1), d_th2 (throttle 2)]
+        Control inputs are in radians.
+    u_true : array-like
+        True control input matrix of shape (n_samples, 5), where columns represent:
+        [d_A (aileron), d_T (tailplane), d_R (rudder), d_th1 (throttle 1), d_th2 (throttle 2)]
+        Control inputs are in radians.
+    title : str
+        The title of the plot.
+
+    Returns:
+    --------
+    None
+        Displays a matplotlib figure with five subplots.
+
+    Notes:
+    ------
+    - Each subplot shows one control input over time with dashed lines indicating the corresponding saturation limits.
+    - The saturation limits for each control variable are defined in radians.
+    """
+    
+    fig, axes = plt.subplots(5, 1, figsize=(10, 12), sharex=True)
+
+    # Set overall figure title
+    fig.suptitle(title, fontsize=16)
+
+    # Saturation limits for each control variable (in radians)
+    saturation_limits = {
+    "d_A": np.radians([-25, 25]),  # Aileron
+    "d_T": np.radians([-25, 10]),  # Tailplane
+    "d_R": np.radians([-30, 30]),  # Rudder
+    "d_th1": np.radians([0.5, 10]),  # Throttle 1
+    "d_th2": np.radians([0.5, 10])   # Throttle 2
+    }
+
+    # Define input names and titles for the plots
+    input_names = ["d_A", "d_T", "d_R", "d_th1", "d_th2"]
+    titles = ["d_A (aileron)", "d_T (tailplane)", "d_R (rudder)", "d_th1 (throttle 1)", "d_th2 (throttle 2)"]
+
+    # Plot each control variable
+    for i, ax in enumerate(axes):
+        input_col = i  # Column index for the control variable
+        var = input_names[i]  # Variable name
+
+        # Plot the control time history and saturation limits
+        ax.plot(t, u_true[:, input_col], color="#2ca02c", label=f"True {titles[i]}", linewidth=2.5)      # Dark green
+        ax.plot(t, u_pred[:, input_col], color="#ff7f0e", linestyle='--', label=f"Predicted {titles[i]}", linewidth=2.0)  # Orange
+        ax.axhline(saturation_limits[var][0], color="#666666", linestyle=':', linewidth=1.2)    # Lower limit
+        ax.axhline(saturation_limits[var][1], color="#666666", linestyle=':', linewidth=1.2)    # Upper limit
+
+        ax.legend(loc="upper right")
+        ax.grid(True)
+
+    # Common x and y labels
+    axes[-1].set_xlabel("Time (s)", fontsize=12)
+    fig.text(0.05, 0.5, "Deflection (rad)", va='center', rotation='vertical', fontsize=12)
+
+    # Adjust layout and show the plot
+    plt.tight_layout(rect=[0.05, 0.05, 1, 0.95])  # Adjust for space around the y-label and suptitle
+    plt.xlim([t[0], t[-1]])
+    plt.show()
+
+    return
