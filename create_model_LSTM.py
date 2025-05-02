@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from preprocess_data import *
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -52,8 +53,10 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
             self.samples = []
             for trim_case in data_dict.values():
                 for profile in trim_case.values():
-                    x = profile["x"]
-                    u = profile["u"]
+                    x_raw = profile["x"]
+                    u_raw = profile["u"]
+                    x = preprocess(x_raw)  # Preprocess state variables
+                    u = preprocess(u_raw)  # Preprocess control variables
                     self.samples.append((x, u, len(x)))
 
         def __len__(self):
@@ -71,20 +74,20 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
         return x_padded, u_padded, lengths
 
     dataset = RCAMDataset(RCAM_data)
-    dataloader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=collate_fn)
+    dataloader = DataLoader(dataset, batch_size=8, shuffle=True, collate_fn=collate_fn)
 
     # -----------------------------
     # Step 4: Training Loop
     # -----------------------------
 
     # Define the model
-    state_dim = 12
+    state_dim = 16  # Adjusted state dimension after augmentation
     control_dim = 5
     hidden_dim = 64
     model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
     criterion = nn.MSELoss(reduction='none')  # so we can mask padded outputs
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.005)
 
     # Record loss and accuracy for every epoch.
     all_train_loss = []
