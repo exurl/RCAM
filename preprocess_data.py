@@ -36,7 +36,7 @@ def scale_x_data(x):
             1,
             1,
             1,
-            1,
+            1e-4,  # dynamic pressure
         ]
     )
 
@@ -124,7 +124,7 @@ def unaugment_unscale_x_data(x):
             1,
             1,
             1,
-            1,
+            1e-4,  # dynamic pressure
         ]
     )
     x_unscaled = x / scale_vector_x
@@ -216,3 +216,12 @@ def postprocess(x_or_u: ArrayLike) -> ArrayLike:
         )
 
     return postprocessed_vector
+
+
+if __name__ == "__main__":
+    x1 = np.array([[100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300]])
+    print(x1)
+    x2 = preprocess(x1)
+    print(x2)
+    x3 = postprocess(x2)
+    print(x3)
