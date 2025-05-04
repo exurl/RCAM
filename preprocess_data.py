@@ -121,9 +121,9 @@ def unaugment_unscale_x_data(x):
             1 / 1e3,  # PE
             1 / 1e3,  # PD
             1,  # cos(psi)
-            1,
-            1,
-            1,
+            1,  # total airspeed
+            1,  # angle of attack
+            1,  # sideslip angle
             1e-4,  # dynamic pressure
         ]
     )
@@ -138,6 +138,7 @@ def unaugment_unscale_x_data(x):
 def augment_data(x):
     """
     Augment state vector variables x by adding relevant virtual variables including:
+    - cosine of yaw angle
     - total airspeed
     - angle of attack
     - sideslip angle
