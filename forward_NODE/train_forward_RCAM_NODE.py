@@ -17,6 +17,21 @@ import matplotlib.pyplot as plt
 sys.path.append("/home/exurl/Projects/ENGR 520/project")
 import preprocess_data
 
+# Constants
+method = "dopri5"
+data_path = "RCAM_data.npy"
+batch_time = 32
+batch_size = 32
+niters = 5000
+test_freq = 100
+lr = 1e-3
+adjoint = False
+seed = 0
+STATE_DIM = 17
+FORCING_DIM = 5
+HIDDEN_DIM = 128
+TIME_DIM = 1  # Time is scalar input
+
 # Device Setup
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -29,20 +44,6 @@ else:
     torch.set_num_threads(12)
 print(f"Using device: {device}")
 
-
-# temp
-method = "dopri5"
-data_path = "RCAM_data.npy"
-batch_time = 32
-batch_size = 32
-niters = 5000
-test_freq = 100
-lr = 1e-3
-hidden_dim = 128
-adjoint = False
-seed = 0
-
-
 # Random Seed
 torch.manual_seed(seed)
 np.random.seed(seed)
@@ -51,11 +52,6 @@ if adjoint:
     from torchdiffeq import odeint_adjoint as odeint
 else:
     from torchdiffeq import odeint
-
-# Constants
-STATE_DIM = 17
-FORCING_DIM = 5
-TIME_DIM = 1  # Time is scalar input
 
 
 # Batched Linear Interpolation for Forcing
@@ -425,13 +421,14 @@ if __name__ == "__main__":
     print(f"Final Loss: {loss_hist[-1]:.6f}")
 
     # Save Final Model
-    torch.save(model.state_dict(), "final_rcam_forward_node.pth")
+    torch.save(model.state_dict(), "forward_NODE/final_rcam_forward_node.pth")
     print("\nFinal model saved to final_rcam_forward_node.pth")
 
     # Plot convergence
     plt.semilogy(np.arange(len(loss_hist)), loss_hist)
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
+    plt.savefig("forward_NODE/convergence.png", dpi=256)
     plt.show()
 
     # Example: Using the trained model for prediction

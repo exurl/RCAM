@@ -3,6 +3,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchdiffeq import odeint
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 from train_forward_RCAM_NODE import (
     load_data,
     get_batch,
@@ -14,13 +17,11 @@ from train_forward_RCAM_NODE import (
     STATE_DIM,
     FORCING_DIM,
     TIME_DIM,
-    hidden_dim,
+    HIDDEN_DIM,
 )
-
 
 sys.path.append("/home/exurl/Projects/ENGR 520/project")
 from preprocess_data import preprocess, postprocess
-import matplotlib.pyplot as plt
 
 # Device Configuration (match your training device if possible)
 if torch.backends.mps.is_available():
@@ -32,10 +33,7 @@ else:
 print(f"Using device for loading: {device}")
 
 # --- 1. Define the Model Architecture (MUST MATCH TRAINING) ---
-STATE_DIM = 17
-FORCING_DIM = 5
-TIME_DIM = 1
-HIDDEN_DIM = 48  # Make sure this is the same as during training
+# see imports
 
 # --- 2. Instantiate the Model ---
 loaded_ode_func = ODEFunc(STATE_DIM, FORCING_DIM, HIDDEN_DIM).to(device)
@@ -57,25 +55,6 @@ if __name__ == "__main__":
     all_conditions = load_data("RCAM_data.npy")
     t_eval, x0, t_u, u_batch, x_true = get_batch(all_conditions, 1, 0, device)
 
-    # t = torch.from_numpy(cond["time"].astype(np.float64)).to(device)
-    # x = preprocess(cond["x"].astype(np.float64))
-    # x0 = torch.from_numpy(x[0])
-    # x0 = x0.unsqueeze(0).to(device)
-    # u = torch.from_numpy(preprocess(cond["u"].astype(np.float64)))
-    # u_batch = u.unsqueeze(0).to(device)
-
-    # # These should be torch.Tensors on the same device as the model
-    # x0_example = torch.randn(1, STATE_DIM).to(
-    #     device
-    # )  # Example initial state (batch_size=1)
-    # t_example = torch.linspace(0, 10, 50).to(
-    #     device
-    # )  # Example evaluation times
-    # t_example = torch.linspace(0, 10, 50).to(device)  # Example forcing times
-    # u_batch_example = torch.randn(1, 50, FORCING_DIM).to(
-    #     device
-    # )  # Example forcing data
-
     with torch.no_grad():
         predicted_trajectory = loaded_model(x0, t_eval, t_u, u_batch)
 
@@ -84,9 +63,9 @@ if __name__ == "__main__":
         "First few predicted states:\n",
         predicted_trajectory[0, :5, :].cpu().numpy(),
     )
-    x_true = x_true.squeeze().numpy()
-    x = predicted_trajectory.squeeze().numpy()
-    u = u_batch.squeeze().numpy()
+    x_true = postprocess(x_true.squeeze().numpy())
+    x = postprocess(predicted_trajectory.squeeze().numpy())
+    u = postprocess(u_batch.squeeze().numpy())
 
     # Plotting
 
@@ -130,9 +109,22 @@ if __name__ == "__main__":
         idx_1 = i * 3
         idx_2 = (i + 1) * 3
 
-        axs[i + 1].plot(t_eval, x_true[:, idx_1:idx_2], "k")
-        axs[i + 1].plot(t_eval, x[:, idx_1:idx_2])
-        axs[i + 1].legend(x_labels[idx_1:idx_2], loc="right", fontsize=8)
+        for j in range(3):
+            axs[i + 1].plot(
+                t_eval,
+                x_true[:, idx_1 + j],
+                "-",
+                c=tuple(mcolors.TABLEAU_COLORS)[j],
+                label=f"truth {x_labels[j]}",
+            )
+            axs[i + 1].plot(
+                t_eval,
+                x[:, idx_1 + j],
+                ":",
+                c=tuple(mcolors.TABLEAU_COLORS)[j],
+                label=f"model {x_labels[j]}",
+            )
+        axs[i + 1].legend(loc="right", fontsize=8)
         axs[i + 1].set_ylabel(x_types[idx_1], fontsize=7)
         axs[i + 1].tick_params(axis="both", which="major", labelsize=6)
         axs[i + 1].tick_params(axis="both", which="minor", labelsize=6)
