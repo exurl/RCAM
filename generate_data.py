@@ -1,18 +1,20 @@
+import time
 import numpy as np
-import matplotlib.pyplot as plt
 from compute_trajectory import simulate_trajectory
 from rcam import rcam_system, rcam_plant
 from common_plotting import *
-import time
 
 # ==== LOAD PREVIOUSLY SAVED CONTROL PROFILES AND TRIM POINTS ====
 
 # Load the saved control profile data and convert to a regular dictionary
-control_profiles_raw = np.load("control_profiles.npz")
+# control_profiles_raw = np.load("control_profiles.npz")  # For training data
+control_profiles_raw = np.load("control_profiles_test.npz")  # For test data
 control_profiles = {key: control_profiles_raw[key] for key in control_profiles_raw}
 
 # Load the saved trim points and convert to a regular dictionary
-trim_results_raw = np.load("trim_points.npz", allow_pickle=True)
+# trim_results_raw = np.load("trim_points.npz", allow_pickle=True)                # For training data
+# trim_results_raw = np.load("trim_points_test_interpolated.npz", allow_pickle=True)   # For test data - interpolated
+trim_results_raw = np.load("trim_points_test_extrapolated.npz", allow_pickle=True)   # For test data - extrapolated
 trim_results = {key: trim_results_raw[key].item() if isinstance(trim_results_raw[key], np.ndarray) and trim_results_raw[key].dtype == 'object' else trim_results_raw[key] 
                 for key in trim_results_raw}
 
@@ -80,32 +82,12 @@ end_time = time.time()
 elapsed_time = end_time - start_time
 print(f"Simulations completed in {elapsed_time:.2f} seconds (total)")
 
-# # Plot response for each trim case and control profile
-# for trim_case, profile_data in RCAM_data.items():
-#     for profile_ID, data in profile_data.items():
-#         t = data["time"]
-#         x = data["x"]
-#         u = data["u"]
-
-#         # Plot state variables
-#         plot_state_variables(t, x, f"State Variables for {trim_case} with {profile_ID}")
-
-#         # Plot trajectory
-#         plot_trajectory(t, x, f"Trajectory for {trim_case} with {profile_ID}")
-
-#         # Plot roll axis trajectories
-#         plot_roll(t, x, u, f"Roll Axis Trajectories for {trim_case} with {profile_ID}")
-
-#         # Plot pitch axis & throttle trajectories
-#         plot_pitch_throttle(t, x, u, f"Pitch Axis & Throttle Trajectories for {trim_case} with {profile_ID}")
-
-#         # PLot yaw axis trajectories
-#         plot_yaw(t, x, u, f"Yaw Axis Trajectories for {trim_case} with {profile_ID}")
-
 # ==== SAVE RESULTS TO FILE ====
 
 # Save all results to one file
-output_file_path = "RCAM_data.npy"
+# output_file_path = "RCAM_data.npy"
+# output_file_path = "RCAM_data_test_interpolation.npy"
+output_file_path = "RCAM_data_test_extrapolation.npy"
 np.save(output_file_path, RCAM_data)
 print(f"Saved output data as {output_file_path}")
 
@@ -114,3 +96,27 @@ print(f"Saved output data as {output_file_path}")
 # # Load the results
 # RCAM_data = np.load("RCAM_data.npy", allow_pickle=True).item()
 # loaded = np.load("simulation_results.npz", allow_pickle=True)
+
+# ==== PLOT DATA ====
+
+# Plot response for each trim case and control profile
+for trim_case, profile_data in RCAM_data.items():
+    for profile_ID, data in profile_data.items():
+        t = data["time"]
+        x = data["x"]
+        u = data["u"]
+
+        # Plot state variables
+        plot_state_variables(t, x, f"State Variables for {trim_case} with {profile_ID}")
+
+        # Plot trajectory
+        plot_trajectory(t, x, f"Trajectory for {trim_case} with {profile_ID}")
+
+        # Plot roll axis trajectories
+        plot_roll(t, x, u, f"Roll Axis Trajectories for {trim_case} with {profile_ID}")
+
+        # Plot pitch axis & throttle trajectories
+        plot_pitch_throttle(t, x, u, f"Pitch Axis & Throttle Trajectories for {trim_case} with {profile_ID}")
+
+        # PLot yaw axis trajectories
+        plot_yaw(t, x, u, f"Yaw Axis Trajectories for {trim_case} with {profile_ID}")
