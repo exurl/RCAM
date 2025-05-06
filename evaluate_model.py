@@ -9,13 +9,17 @@ from create_model_LSTM import InverseDynamicsLSTM
 RCAM_data = np.load("RCAM_data.npy", allow_pickle=True).item()
 
 # Define the model
-state_dim = 16  # 12 state variables + 4 augmented variables
+state_dim = 15  # 11 state variables + 4 augmented variables
 control_dim = 5
 hidden_dim = 64
 model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
 # Load the trained weights
 model.load_state_dict(torch.load("model_parameters_lstm.pth"))
+# model_dict = torch.load("model_parameters_lstm.pth")
+# model.load_state_dict(model_dict["model_state_dict"])
+# train_loss = model_dict["training_loss"]
+# epochs_trained = model_dict["epoch"]
 
 # Set model to evaluation mode
 model.eval()
@@ -31,7 +35,8 @@ def predict_u_from_x(x, model):
         u_pred (Numpy array): shape [T, control_dim]
     """
     x_processed = preprocess(x)  # Preprocess state variables
-    x = torch.tensor(x_processed, dtype=torch.float32)
+    x_reduced = np.delete(x_processed, [8, 12], axis=1) # Remove psi terms from state vector to ensure model dynamics are invariant to heading angle               
+    x = torch.tensor(x_reduced, dtype=torch.float32)
     
     with torch.no_grad():
         x = x.unsqueeze(0)  # add batch dimension -> [1, T, state_dim]
@@ -55,7 +60,7 @@ for trim_key_idx, (trim_key, trim_profiles) in enumerate(RCAM_data.items()):
         if prof_idx >= 3:
             break  # only first 3 profiles per trim
 
-        if prof_idx >= 120:
+        if prof_idx >= 140:
             x = profile["x"]
             u_true = torch.tensor(profile["u"], dtype=torch.float32)
             t = profile["time"]

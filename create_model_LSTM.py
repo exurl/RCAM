@@ -93,7 +93,7 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     all_train_loss = []
     all_train_accuracy = []
 
-    num_epochs = 30  # Set number of training epochs
+    num_epochs = 100  # Set number of training epochs
 
     for epoch in tqdm(range(num_epochs)):
         
@@ -133,4 +133,9 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     plt.show()
 
     # Save the model parameters
-    torch.save(model.state_dict(), "model_parameters_lstm.pth")
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'training_loss': all_train_loss,
+        'epoch': epoch
+    }, "model_checkpoint_lstm.pth")
