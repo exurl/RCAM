@@ -1,18 +1,19 @@
+import re
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import re
 from common_plotting import plot_control_inputs
 
 # ==== USER-SPECIFIED VALUES ====
 # Path to the Excel file containing control input profiles
-excel_file = "Control Input Profiles.xlsx"
+# excel_file = "Control Input Profiles.xlsx"
+excel_file = "Control Input Profiles - Test.xlsx"
 
 # Time step for generating profiles
 delta_t = 0.05  # seconds
 
 # Random number generator seed
-np.random.seed(42)
+# np.random.seed(42)  # Used for generating training data profiles
+np.random.seed(99)  # Used for generating test data profiles
 
 # Trim values for each control variable (default values)
 trim_values = { 
@@ -213,12 +214,13 @@ for _, row in df.iterrows():
 # ==== SAVE PROFILES TO FILE ====
 
 # Save to file
-np.savez("control_profiles.npz", **control_profiles)
+# np.savez("control_profiles.npz", **control_profiles)
+np.savez("control_profiles_test.npz", **control_profiles)
 
 # ==== PLOT CONTROL INPUT PROFILES ====
 
 # Customize how many profiles you want to plot
-profile_keys = list(control_profiles.keys())[132:]  # Plot specific profiles
+profile_keys = list(control_profiles.keys())[40:78]  # Plot specific profiles
 
 # Plot each selected profile
 for profile_id in profile_keys:
