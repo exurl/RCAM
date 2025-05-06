@@ -9,17 +9,18 @@ from create_model_LSTM import InverseDynamicsLSTM
 RCAM_data = np.load("RCAM_data.npy", allow_pickle=True).item()
 
 # Define the model
-state_dim = 15  # 11 state variables + 4 augmented variables
+state_dim = 27  # 11 state variables + 4 augmented variables + 12 dx/dt variables
 control_dim = 5
 hidden_dim = 64
 model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
 # Load the trained weights
-model.load_state_dict(torch.load("model_parameters_lstm.pth"))
-# model_dict = torch.load("model_parameters_lstm.pth")
-# model.load_state_dict(model_dict["model_state_dict"])
-# train_loss = model_dict["training_loss"]
-# epochs_trained = model_dict["epoch"]
+# model.load_state_dict(torch.load("model_parameters_lstm.pth"))    # Old method
+model_dict = torch.load("model_parameters_lstm.pth")
+model.load_state_dict(model_dict["model_state_dict"])
+train_loss = model_dict["training_loss"]
+epochs_trained = model_dict["epoch"]
+print(f"Loaded model trained for {epochs_trained + 1} epochs with training loss: {train_loss[-1]:.4f}")
 
 # Set model to evaluation mode
 model.eval()

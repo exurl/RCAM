@@ -55,7 +55,9 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
                 for profile in trim_case.values():
                     x_raw = profile["x"]
                     u_raw = profile["u"]
-                    x = preprocess(x_raw)  # Preprocess state variables
+                    x = preprocess(x_raw, augment_dxdt=True)  # Preprocess state variables
+                    # Remove psi terms from state vector to ensure model dynamics are invariant to heading angle
+                    x = np.delete(x, [8, 12], axis=1) 
                     u = preprocess(u_raw)  # Preprocess control variables
                     self.samples.append((x, u, len(x)))
 
@@ -81,7 +83,7 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     # -----------------------------
 
     # Define the model
-    state_dim = 16  # Adjusted state dimension after augmentation
+    state_dim = 27  # Adjusted state dimension after augmentation
     control_dim = 5
     hidden_dim = 64
     model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
@@ -133,9 +135,12 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     plt.show()
 
     # Save the model parameters
+    output_file_path = "model_parameters_lstm.pth"
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'training_loss': all_train_loss,
         'epoch': epoch
-    }, "model_checkpoint_lstm.pth")
+    }, output_file_path)
+    print(f"Saved model parameters to {output_file_path}")
+    print(f"Final training loss: {all_train_loss[-1]}")

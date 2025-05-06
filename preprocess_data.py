@@ -11,16 +11,16 @@ def scale_x_data(x):
     discontinuity issues.
 
     Inputs are:
-    x: n x 17 Numpy array
+    x: n x m Numpy array, where m is the number of augmented state variables (17 or 29)
 
-    Outpus are:
-    x_scaled: n x 17 Numpy array
+    Outputs are:
+    x_scaled: n x m Numpy array
     """
 
     # State vector scale factors
     scale_vector_x = np.array(
         [
-            1 / 1e2,  # u
+            1e-2,  # u
             1 / 40,  # v
             1 / 40,  # w
             1 / 0.6,  # p
@@ -29,16 +29,24 @@ def scale_x_data(x):
             1 / np.radians(45),  # phi
             1 / np.radians(20),  # theta
             1,  # sin(psi)
-            1 / 1e3,  # PN
-            1 / 1e3,  # PE
-            1 / 1e3,  # PD
+            1e-3,  # PN
+            1e-3,  # PE
+            1e-3,  # PD
             1,  # cos(psi)
-            1,
-            1,
-            1,
-            1e-4,  # dynamic pressure
+            1,  # total airspeed
+            1,  # angle of attack
+            1,  # sideslip angle
+            1e-4  # dynamic pressure
         ]
     )
+
+    # If the input includes dx/dt (length 29 columns):
+    if x.shape[1] == 29:
+        # Augment scale_factor_x with dx/dt scale factors, using the same scale factors 
+        # for dx/dt as for the original state variables
+        scale_vector_x = np.concatenate(
+            (scale_vector_x, scale_vector_x[:12]), axis=0
+        )
 
     x_scaled = x * scale_vector_x
 
@@ -135,7 +143,7 @@ def unaugment_unscale_x_data(x):
     return x_unaugmented
 
 
-def augment_data(x):
+def augment_data(x, augment_dxdt=False):
     """
     Augment state vector variables x by adding relevant virtual variables including:
     - cosine of yaw angle
@@ -144,11 +152,15 @@ def augment_data(x):
     - sideslip angle
     - dynamic pressure
 
+    If augment_dxdt=True, also augment state vector by adding the time derivative 
+    of the full x state.
+
     Inputs are:
     x: n x 12 Numpy array
 
     Outputs are:
-    x_augmented: n x 17 Numpy array
+    x_augmented: n x 17 Numpy array (if augment_dxdt=False)
+    x_augmented: n x 29 Numpy array (if augment_dxdt=True)
     """
     rho = 1.225  # air density at sea level
     cos_psi = np.cos(x[:, 11])  # cos(psi)
@@ -169,10 +181,15 @@ def augment_data(x):
         )
     )
 
+    # If augment_dxdt is True, also add the time derivative of the full x state
+    if augment_dxdt==True:        
+        dxdt = np.gradient(x, axis=0)  # Calculate the time derivative of x
+        x_augmented = np.hstack((x_augmented, dxdt))
+
     return x_augmented
 
 
-def preprocess(x_or_u: ArrayLike) -> ArrayLike:
+def preprocess(x_or_u: ArrayLike, augment_dxdt=False) -> ArrayLike:
     """
         Preprocess state (x) or control (u) vector variables by scaling and augmenting.
 
@@ -180,14 +197,15 @@ def preprocess(x_or_u: ArrayLike) -> ArrayLike:
         x_or_u: n x 12 state array OR n x 5 control array
 
         Returns:
-    ArrayLike: n x 17 state array OR n x 5 control array
+        ArrayLike: n x m state array OR n x 5 control array, where m is the number of 
+        augmented state variables (17 or 29, depending on augment_dxdt)
     """
     if x_or_u.shape[1] == 5:
         # If input is control vector, scale it
         preprocessed_vector = scale_u_data(x_or_u)
     elif x_or_u.shape[1] == 12:
         # If input is state vector, augment and scale it
-        preprocessed_vector = scale_x_data(augment_data(x_or_u))
+        preprocessed_vector = scale_x_data(augment_data(x_or_u, augment_dxdt=augment_dxdt))
     else:
         raise ValueError(
             f"Expected size of x_or_u to be 5 or 12, received size {x_or_u.size}"
