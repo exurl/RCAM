@@ -35,7 +35,8 @@ def predict_u_from_x(x, model):
     Returns:
         u_pred (Numpy array): shape [T, control_dim]
     """
-    x_processed = preprocess(x)  # Preprocess state variables
+    # x_processed = preprocess(x, augment_dxdt=False)  # Preprocess state variables
+    x_processed = preprocess(x, augment_dxdt=True)  # Preprocess state variables
     x_reduced = np.delete(x_processed, [8, 12], axis=1) # Remove psi terms from state vector to ensure model dynamics are invariant to heading angle               
     x = torch.tensor(x_reduced, dtype=torch.float32)
     
@@ -61,7 +62,7 @@ for trim_key_idx, (trim_key, trim_profiles) in enumerate(RCAM_data.items()):
         if prof_idx >= 3:
             break  # only first 3 profiles per trim
 
-        if prof_idx >= 140:
+        if prof_idx >= 0:
             x = profile["x"]
             u_true = torch.tensor(profile["u"], dtype=torch.float32)
             t = profile["time"]
