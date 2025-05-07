@@ -128,9 +128,13 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
 
     # Plot the loss across epochs
     plt.figure(figsize=(8, 3))
-    plt.plot(all_train_loss, "o-", c="tab:red")
-    plt.title("Loss")
-    plt.xlabel("Epochs")
+    plt.plot(all_train_loss, "o-", color="tab:red", label="Training Loss")
+    plt.title("Training Loss over Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.yscale("log")  # Set y-axis to logarithmic scale
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
