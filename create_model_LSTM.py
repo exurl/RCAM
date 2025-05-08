@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from preprocess_data import *
+from soft_dtw_cuda import SoftDTW
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -88,7 +89,9 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     hidden_dim = 64
     model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
-    criterion = nn.MSELoss(reduction='none')  # so we can mask padded outputs
+    # Define loss function and optimizer
+    # criterion = nn.MSELoss(reduction='none')  # MSE loss function with padding
+    criterion = SoftDTW(use_cuda=False, gamma=0.1)   # Soft-DTW loss function
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005)
 
     # Record loss and accuracy for every epoch.
@@ -115,8 +118,10 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
             mask = torch.arange(max_len)[None, :] < lengths[:, None]
             mask = mask.unsqueeze(-1).expand_as(u_batch)
 
+            # Compute the loss using criterion above
             loss = criterion(u_pred, u_batch)
-            loss = loss[mask].mean()
+            # loss = loss[mask].mean()    # For MSE loss
+            loss = loss.mean()    # For Soft-DTW loss
 
             loss.backward()     # Compute gradients
             optimizer.step()    # Update the model weights
