@@ -7,6 +7,8 @@ from create_model_LSTM import InverseDynamicsLSTM
 
 # Import training data
 RCAM_data = np.load("RCAM_data.npy", allow_pickle=True).item()
+# RCAM_data = np.load("RCAM_data_test_interpolation.npy", allow_pickle=True).item()
+# RCAM_data = np.load("RCAM_data_test_extrapolation.npy", allow_pickle=True).item()
 
 # Define the model
 state_dim = 27  # 11 state variables + 4 augmented variables + 12 dx/dt variables
