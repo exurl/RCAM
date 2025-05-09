@@ -11,7 +11,7 @@ def scale_x_data(x):
     discontinuity issues.
 
     Inputs are:
-    x: n x m Numpy array, where m is the number of augmented state variables (17 or 29)
+    x: n x m Numpy array, where m is the number of augmented state variables (17 or 34)
 
     Outputs are:
     x_scaled: n x m Numpy array
@@ -40,12 +40,12 @@ def scale_x_data(x):
         ]
     )
 
-    # If the input includes dx/dt (length 29 columns):
-    if x.shape[1] == 29:
+    # If the input includes dx/dt (length 34 columns):
+    if x.shape[1] == 34:
         # Augment scale_factor_x with dx/dt scale factors, using the same scale factors
         # for dx/dt as for the original state variables
         scale_vector_x = np.concatenate(
-            (scale_vector_x, scale_vector_x[:12]), axis=0
+            (scale_vector_x, np.ones_like(scale_vector_x)), axis=0
         )
 
     x_scaled = x * scale_vector_x
@@ -135,8 +135,8 @@ def unaugment_unscale_x_data(x):
             1e-4,  # dynamic pressure
         ]
     )
-    if x.shape[1] == 29:
-        scale_vector_x = np.append(scale_vector_x, np.ones(12))
+    if x.shape[1] == 34:
+        scale_vector_x = np.append(scale_vector_x, np.ones(17))
     x_unscaled = x / scale_vector_x
     x_unscaled[:, 8] = np.arcsin(x_unscaled[:, 8])
 
@@ -162,7 +162,7 @@ def augment_data(x, augment_dxdt=False):
 
     Outputs are:
     x_augmented: n x 17 Numpy array (if augment_dxdt=False)
-    x_augmented: n x 29 Numpy array (if augment_dxdt=True)
+    x_augmented: n x 34 Numpy array (if augment_dxdt=True)
     """
     rho = 1.225  # air density at sea level
     cos_psi = np.cos(x[:, 11])  # cos(psi)
@@ -187,7 +187,9 @@ def augment_data(x, augment_dxdt=False):
     if augment_dxdt == True:
         if x.shape[0] < 2:
             raise ValueError(f"x must have multiple entries, not {x.shape[0]}")
-        dxdt = np.gradient(x, axis=0)  # Calculate the time derivative of x
+        dxdt = np.gradient(
+            x_augmented, axis=0
+        )  # Calculate the time derivative of x
         x_augmented = np.hstack((x_augmented, dxdt))
 
     return x_augmented
@@ -202,7 +204,7 @@ def preprocess(x_or_u: ArrayLike, augment_dxdt=False) -> ArrayLike:
 
     Returns:
     ArrayLike: n x m state array OR n x 5 control array, where m is the number of
-    augmented state variables (17 or 29, depending on augment_dxdt)
+    augmented state variables (17 or 34, depending on augment_dxdt)
     """
     if x_or_u.shape[1] == 5:
         # If input is control vector, scale it
@@ -224,7 +226,7 @@ def postprocess(x_or_u: ArrayLike) -> ArrayLike:
     """Postprocess state (x) or contrl control (u) vector variables by scaling and augmenting.
 
     Args:
-        x_or_u (ArrayLike): n x 17 state array OR n x 5 control array
+        x_or_u (ArrayLike): n x 17 state array OR n x 34 state array OR n x 5 control array
 
     Returns:
         ArrayLike: n x 12 state array OR n x 5 control array
@@ -232,27 +234,28 @@ def postprocess(x_or_u: ArrayLike) -> ArrayLike:
     if x_or_u.shape[1] == 5:
         # If input is a control vector, unscale it
         postprocessed_vector = unscale_u_data(x_or_u)
-    elif x_or_u.shape[1] in [17, 29]:
+    elif x_or_u.shape[1] in [17, 34]:
         # If input is a state vector, unscale and unaugment it
         postprocessed_vector = unaugment_unscale_x_data(x_or_u)
     else:
         raise ValueError(
-            f"Expected size of x_or_u to be 5 or 17, received size {x_or_u.size}"
+            f"Expected size of x_or_u to be 5 or 17 or 34, received size {x_or_u.size}"
         )
 
     return postprocessed_vector
 
 
 if __name__ == "__main__":
+    # Check that postproc(preproc(X)) is the identity transform
     x1 = np.array(
         [
             [100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [101, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [102, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [102, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [101, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
-            [100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 100, 200, 300],
+            [100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 101, 200, 300],
+            [101, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 102, 200, 300],
+            [102, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 104, 200, 300],
+            [102, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 108, 200, 300],
+            [101, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 116, 200, 300],
+            [100, 5, 8, 0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 132, 200, 300],
         ]
     )
     print(x1)
