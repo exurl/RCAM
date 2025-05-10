@@ -90,8 +90,8 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
     # Define loss function and optimizer
-    # criterion = nn.MSELoss(reduction='none')  # MSE loss function with padding
-    criterion = SoftDTW(use_cuda=False, gamma=0.1)   # Soft-DTW loss function
+    criterion = nn.MSELoss(reduction='none')  # MSE loss function with padding
+    # criterion = SoftDTW(use_cuda=False, gamma=0.1)   # Soft-DTW loss function
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005)
 
     # Record loss and accuracy for every epoch.
@@ -120,8 +120,8 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
 
             # Compute the loss using criterion above
             loss = criterion(u_pred, u_batch)
-            # loss = loss[mask].mean()    # For MSE loss
-            loss = loss.mean()    # For Soft-DTW loss
+            loss = loss[mask].mean()    # For MSE loss
+            # loss = loss.mean()    # For Soft-DTW loss
 
             loss.backward()     # Compute gradients
             optimizer.step()    # Update the model weights

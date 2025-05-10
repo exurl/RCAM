@@ -214,7 +214,7 @@ for _, row in df.iterrows():
 # ==== SAVE PROFILES TO FILE ====
 
 # Save to file
-# np.savez("control_profiles.npz", **control_profiles)
+# np.savez("control_profiles_train.npz", **control_profiles)
 np.savez("control_profiles_test.npz", **control_profiles)
 
 # ==== PLOT CONTROL INPUT PROFILES ====

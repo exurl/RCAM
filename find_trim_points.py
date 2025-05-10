@@ -3,7 +3,6 @@ from trim import *
 from compute_trajectory import simulate_trajectory
 from common_plotting import plot_state_variables, plot_trajectory
 
-
 # Initial guess for the state and control vectors (rough estimate)
 x0_guess = np.zeros(12)
 u0_guess = np.zeros(5)
@@ -12,70 +11,81 @@ u0_guess[4] = deg2rad(5.25)  # throttle position of engine 2 setting
 
 # ==== Define trim cases ====
 
-# # Define trim cases for training data generation
-# trim_cases = [
-#     # Straight and level at 70 m/s and 1000 m altitude
-#     {
-#         "name": "StraightLevel_70ms_1000m",
-#         "airspeed": 70.0,
-#         "altitude": 1000.0
-#     },
-#     # Straight and level at 120 m/s and 10000 m altitude
-#     {
-#         "name": "StraightLevel_120ms_10000m",
-#         "airspeed": 120.0,
-#         "altitude": 10000.0
-#     },
-#     # Coordinated turn at 70 m/s with +10 degree bank
-#     {
-#         "name": "BankedTurn_70ms_1000m_+10deg",
-#         "airspeed": 70.0,
-#         "altitude": 1000.0,
-#         "bank_angle": np.deg2rad(10)
-#     },
-#     # Coordinated turn at 70 m/s with -10 degree bank
-#     {
-#         "name": "BankedTurn_70ms_1000m_-10deg",
-#         "airspeed": 70.0,
-#         "altitude": 1000.0,
-#         "bank_angle": np.deg2rad(-10)
-#     },
-#     # Coordinated turn at 80 m/s with +30 degree bank
-#     {
-#         "name": "BankedTurn_80ms_2000m_+30deg",
-#         "airspeed": 80.0,
-#         "altitude": 2000.0,
-#         "bank_angle": np.deg2rad(30)
-#     },
-#     # Coordinated turn at 80 m/s with -30 degree bank
-#     {
-#         "name": "BankedTurn_80ms_2000m_-30deg",
-#         "airspeed": 80.0,
-#         "altitude": 2000.0,
-#         "bank_angle": np.deg2rad(-30)
-#     },
-#     # Coordinated turn at 120 m/s with +10 degree bank
-#     {
-#         "name": "BankedTurn_120ms_10000m_+10deg",
-#         "airspeed": 120.0,
-#         "altitude": 10000.0,
-#         "bank_angle": np.deg2rad(10)
-#     },
-#     # Coordinated turn at 120 m/s with -10 degree bank
-#     {
-#         "name": "BankedTurn_120ms_10000m_-10deg",
-#         "airspeed": 120.0,
-#         "altitude": 10000.0,
-#         "bank_angle": np.deg2rad(-10)
-#     },
-#     # Constant descent with -3 deg flight path angle
-#     {
-#         "name": "Descent_80ms_2000m_-3deg_fltpath",
-#         "airspeed": 80.0,
-#         "altitude": 2000.0,
-#         "flight_path_angle": -np.deg2rad(3)
-#     }
-# ]
+# Define trim cases for training data generation
+trim_cases = [
+    # Straight and level at 70 m/s and 1000 m altitude
+    {
+        "name": "StraightLevel_70ms_1000m",
+        "airspeed": 70.0,
+        "altitude": 1000.0,
+        "bank_angle": np.deg2rad(0),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Straight and level at 120 m/s and 10000 m altitude
+    {
+        "name": "StraightLevel_120ms_10000m",
+        "airspeed": 120.0,
+        "altitude": 10000.0,
+        "bank_angle": np.deg2rad(0),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 70 m/s with +10 degree bank
+    {
+        "name": "BankedTurn_70ms_1000m_+10deg",
+        "airspeed": 70.0,
+        "altitude": 1000.0,
+        "bank_angle": np.deg2rad(10),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 70 m/s with -10 degree bank
+    {
+        "name": "BankedTurn_70ms_1000m_-10deg",
+        "airspeed": 70.0,
+        "altitude": 1000.0,
+        "bank_angle": np.deg2rad(-10),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 80 m/s with +30 degree bank
+    {
+        "name": "BankedTurn_80ms_2000m_+30deg",
+        "airspeed": 80.0,
+        "altitude": 2000.0,
+        "bank_angle": np.deg2rad(30),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 80 m/s with -30 degree bank
+    {
+        "name": "BankedTurn_80ms_2000m_-30deg",
+        "airspeed": 80.0,
+        "altitude": 2000.0,
+        "bank_angle": np.deg2rad(-30),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 120 m/s with +10 degree bank
+    {
+        "name": "BankedTurn_120ms_10000m_+10deg",
+        "airspeed": 120.0,
+        "altitude": 10000.0,
+        "bank_angle": np.deg2rad(10),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Coordinated turn at 120 m/s with -10 degree bank
+    {
+        "name": "BankedTurn_120ms_10000m_-10deg",
+        "airspeed": 120.0,
+        "altitude": 10000.0,
+        "bank_angle": np.deg2rad(-10),
+        "flight_path_angle": np.deg2rad(0)
+    },
+    # Constant descent with -3 deg flight path angle
+    {
+        "name": "Descent_80ms_2000m_-3deg_fltpath",
+        "airspeed": 80.0,
+        "altitude": 2000.0,
+        "bank_angle": np.deg2rad(0),
+        "flight_path_angle": -np.deg2rad(3)
+    }
+]
 
 # # Define trim cases for test data generation - interpolation
 # trim_cases = [
@@ -83,101 +93,119 @@ u0_guess[4] = deg2rad(5.25)  # throttle position of engine 2 setting
 #     {
 #         "name": "StraightLevel_85ms_3000m",
 #         "airspeed": 85.0,
-#         "altitude": 3000.0
+#         "altitude": 3000.0,
+#         "bank_angle": np.deg2rad(0),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Straight and level at 100 m/s and 10000 m altitude
 #     {
 #         "name": "StraightLevel_100ms_10000m",
 #         "airspeed": 100.0,
-#         "altitude": 10000.0
+#         "altitude": 10000.0,
+#         "bank_angle": np.deg2rad(0),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Coordinated turn at 80 m/s with +20 degree bank
 #     {
 #         "name": "BankedTurn_80ms_2000m_+20deg",
 #         "airspeed": 80.0,
 #         "altitude": 2000.0,
-#         "bank_angle": np.deg2rad(20)
+#         "bank_angle": np.deg2rad(20),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Coordinated turn at 80 m/s with -20 degree bank
 #     {
 #         "name": "BankedTurn_80ms_2000m_-20deg",
 #         "airspeed": 80.0,
 #         "altitude": 2000.0,
-#         "bank_angle": np.deg2rad(-20)
+#         "bank_angle": np.deg2rad(-20),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Coordinated turn at 100 m/s with +10 degree bank
 #     {
 #         "name": "BankedTurn_100ms_10000m_+10deg",
 #         "airspeed": 100.0,
 #         "altitude": 10000.0,
-#         "bank_angle": np.deg2rad(10)
+#         "bank_angle": np.deg2rad(10),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Coordinated turn at 100 m/s with -10 degree bank
 #     {
 #         "name": "BankedTurn_100ms_10000m_-10deg",
 #         "airspeed": 100.0,
 #         "altitude": 10000.0,
-#         "bank_angle": np.deg2rad(-10)
+#         "bank_angle": np.deg2rad(-10),
+#         "flight_path_angle": np.deg2rad(0)
 #     },
 #     # Constant descent with -3 deg flight path angle
 #     {
 #         "name": "Descent_80ms_2000m_-2deg_fltpath",
 #         "airspeed": 80.0,
 #         "altitude": 2000.0,
+#         "bank_angle": np.deg2rad(0),
 #         "flight_path_angle": -np.deg2rad(2)
 #     }
 # ]
 
-# Define trim cases for test data generation - extrapolation
-trim_cases = [
-    # Straight and level at 60 m/s and 1000 m altitude
-    {
-        "name": "StraightLevel_60ms_1000m",
-        "airspeed": 60.0,
-        "altitude": 1000.0
-    },
-    # Straight and level at 120 m/s and 10000 m altitude
-    {
-        "name": "StraightLevel_130ms_10000m",
-        "airspeed": 130.0,
-        "altitude": 10000.0
-    },
-    # Coordinated turn at 80 m/s with +40 degree bank
-    {
-        "name": "BankedTurn_80ms_2000m_+40deg",
-        "airspeed": 80.0,
-        "altitude": 2000.0,
-        "bank_angle": np.deg2rad(40)
-    },
-    # Coordinated turn at 80 m/s with -40 degree bank
-    {
-        "name": "BankedTurn_80ms_2000m_-40deg",
-        "airspeed": 80.0,
-        "altitude": 2000.0,
-        "bank_angle": np.deg2rad(-40)
-    },
-    # Coordinated turn at 120 m/s with +45 degree bank
-    {
-        "name": "BankedTurn_120ms_10000m_+45deg",
-        "airspeed": 120.0,
-        "altitude": 10000.0,
-        "bank_angle": np.deg2rad(45)
-    },
-    # Coordinated turn at 120 m/s with -45 degree bank
-    {
-        "name": "BankedTurn_120ms_10000m_-45deg",
-        "airspeed": 120.0,
-        "altitude": 10000.0,
-        "bank_angle": np.deg2rad(-45)
-    },
-    # Constant descent with -4 deg flight path angle
-    {
-        "name": "Descent_80ms_2000m_-4deg_fltpath",
-        "airspeed": 80.0,
-        "altitude": 2000.0,
-        "flight_path_angle": -np.deg2rad(4)
-    }
-]
+# # Define trim cases for test data generation - extrapolation
+# trim_cases = [
+#     # Straight and level at 60 m/s and 1000 m altitude
+#     {
+#         "name": "StraightLevel_60ms_1000m",
+#         "airspeed": 60.0,
+#         "altitude": 1000.0,
+#         "bank_angle": np.deg2rad(0),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Straight and level at 120 m/s and 10000 m altitude
+#     {
+#         "name": "StraightLevel_130ms_10000m",
+#         "airspeed": 130.0,
+#         "altitude": 10000.0,
+#         "bank_angle": np.deg2rad(0),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Coordinated turn at 80 m/s with +40 degree bank
+#     {
+#         "name": "BankedTurn_80ms_2000m_+40deg",
+#         "airspeed": 80.0,
+#         "altitude": 2000.0,
+#         "bank_angle": np.deg2rad(40),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Coordinated turn at 80 m/s with -40 degree bank
+#     {
+#         "name": "BankedTurn_80ms_2000m_-40deg",
+#         "airspeed": 80.0,
+#         "altitude": 2000.0,
+#         "bank_angle": np.deg2rad(-40),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Coordinated turn at 120 m/s with +45 degree bank
+#     {
+#         "name": "BankedTurn_120ms_10000m_+45deg",
+#         "airspeed": 120.0,
+#         "altitude": 10000.0,
+#         "bank_angle": np.deg2rad(45),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Coordinated turn at 120 m/s with -45 degree bank
+#     {
+#         "name": "BankedTurn_120ms_10000m_-45deg",
+#         "airspeed": 120.0,
+#         "altitude": 10000.0,
+#         "bank_angle": np.deg2rad(-45),
+#         "flight_path_angle": np.deg2rad(0)
+#     },
+#     # Constant descent with -4 deg flight path angle
+#     {
+#         "name": "Descent_80ms_2000m_-4deg_fltpath",
+#         "airspeed": 80.0,
+#         "altitude": 2000.0,
+#         "bank_angle": np.deg2rad(0),
+#         "flight_path_angle": -np.deg2rad(4)
+#     }
+# ]
 
 # ==== Obtain trim points ====
 
@@ -214,9 +242,9 @@ for case in trim_cases:
 # ==== Save trim results to file ====
 
 # Save to file
-# np.savez("trim_points.npz", **trim_results)
+np.savez("trim_points_train.npz", **trim_results)
 # np.savez("trim_points_test_interpolated.npz", **trim_results)
-np.savez("trim_points_test_extrapolated.npz", **trim_results)
+# np.savez("trim_points_test_extrapolated.npz", **trim_results)
 
 # ==== Evaluate trim points ====
 
