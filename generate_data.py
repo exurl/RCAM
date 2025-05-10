@@ -7,14 +7,14 @@ from common_plotting import *
 # ==== LOAD PREVIOUSLY SAVED CONTROL PROFILES AND TRIM POINTS ====
 
 # Load the saved control profile data and convert to a regular dictionary
-# control_profiles_raw = np.load("control_profiles.npz")  # For training data
-control_profiles_raw = np.load("control_profiles_test.npz")  # For test data
+control_profiles_raw = np.load("control_profiles_train.npz")  # For training data
+# control_profiles_raw = np.load("control_profiles_test.npz")  # For test data
 control_profiles = {key: control_profiles_raw[key] for key in control_profiles_raw}
 
 # Load the saved trim points and convert to a regular dictionary
-# trim_results_raw = np.load("trim_points.npz", allow_pickle=True)                # For training data
+trim_results_raw = np.load("trim_points_train.npz", allow_pickle=True)                # For training data
 # trim_results_raw = np.load("trim_points_test_interpolated.npz", allow_pickle=True)   # For test data - interpolated
-trim_results_raw = np.load("trim_points_test_extrapolated.npz", allow_pickle=True)   # For test data - extrapolated
+# trim_results_raw = np.load("trim_points_test_extrapolated.npz", allow_pickle=True)   # For test data - extrapolated
 trim_results = {key: trim_results_raw[key].item() if isinstance(trim_results_raw[key], np.ndarray) and trim_results_raw[key].dtype == 'object' else trim_results_raw[key] 
                 for key in trim_results_raw}
 
