@@ -85,9 +85,9 @@ print(f"Simulations completed in {elapsed_time:.2f} seconds (total)")
 # ==== SAVE RESULTS TO FILE ====
 
 # Save all results to one file
-# output_file_path = "RCAM_data.npy"
+output_file_path = "RCAM_data.npy"
 # output_file_path = "RCAM_data_test_interpolation.npy"
-output_file_path = "RCAM_data_test_extrapolation.npy"
+# output_file_path = "RCAM_data_test_extrapolation.npy"
 np.save(output_file_path, RCAM_data)
 print(f"Saved output data as {output_file_path}")
 
