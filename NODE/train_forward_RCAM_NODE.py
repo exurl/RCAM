@@ -231,7 +231,9 @@ def load_data(data_path):
             data = RCAM_data[trim_c][force_c]
             t = data["time"].astype(np.float64)
             u = preprocess_data.preprocess(data["u"]).astype(np.float64)
-            x = preprocess_data.preprocess(data["x"]).astype(np.float64)
+            x = preprocess_data.preprocess(
+                data["x"], augment_dxdt=False
+            ).astype(np.float64)
 
             assert (
                 t.shape[0] == u.shape[0] == x.shape[0]
@@ -360,7 +362,7 @@ if __name__ == "__main__":
     all_data = load_data(data_path)
 
     # Build Model
-    ode_func = ODEFunc(STATE_DIM, FORCING_DIM, hidden_dim).to(device)
+    ode_func = ODEFunc(STATE_DIM, FORCING_DIM, HIDDEN_DIM).to(device)
     model = NeuralODE(ode_func).to(device)
 
     print("\nModel Architecture (ODEFunc Dynamics Net):")
