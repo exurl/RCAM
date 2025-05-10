@@ -41,7 +41,7 @@ loaded_model = NeuralODE(loaded_ode_func).to(device)
 
 # --- 3. Load the State Dictionary ---
 checkpoint = torch.load(
-    "forward_NODE/final_rcam_forward_node.pth", map_location=device
+    "NODE/final_rcam_forward_node.pth", map_location=device
 )
 
 # --- 4. Load the State Dictionary into the Model ---

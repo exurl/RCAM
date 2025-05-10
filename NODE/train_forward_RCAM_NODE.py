@@ -421,14 +421,14 @@ if __name__ == "__main__":
     print(f"Final Loss: {loss_hist[-1]:.6f}")
 
     # Save Final Model
-    torch.save(model.state_dict(), "forward_NODE/final_rcam_forward_node.pth")
+    torch.save(model.state_dict(), "NODE/final_rcam_forward_node.pth")
     print("\nFinal model saved to final_rcam_forward_node.pth")
 
     # Plot convergence
     plt.semilogy(np.arange(len(loss_hist)), loss_hist)
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.savefig("forward_NODE/convergence.png", dpi=256)
+    plt.savefig("NODE/convergence.png", dpi=256)
     plt.show()
 
     # Example: Using the trained model for prediction

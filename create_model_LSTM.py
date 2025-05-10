@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from preprocess_data import *
+from soft_dtw_cuda import SoftDTW
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -55,7 +56,9 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
                 for profile in trim_case.values():
                     x_raw = profile["x"]
                     u_raw = profile["u"]
-                    x = preprocess(x_raw)  # Preprocess state variables
+                    x = preprocess(x_raw, augment_dxdt=True)  # Preprocess state variables
+                    # Remove psi terms from state vector to ensure model dynamics are invariant to heading angle
+                    x = np.delete(x, [8, 12], axis=1) 
                     u = preprocess(u_raw)  # Preprocess control variables
                     self.samples.append((x, u, len(x)))
 
@@ -81,12 +84,14 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
     # -----------------------------
 
     # Define the model
-    state_dim = 16  # Adjusted state dimension after augmentation
+    state_dim = 27  # Adjusted state dimension after augmentation
     control_dim = 5
     hidden_dim = 64
     model = InverseDynamicsLSTM(state_dim, hidden_dim, control_dim)
 
-    criterion = nn.MSELoss(reduction='none')  # so we can mask padded outputs
+    # Define loss function and optimizer
+    # criterion = nn.MSELoss(reduction='none')  # MSE loss function with padding
+    criterion = SoftDTW(use_cuda=False, gamma=0.1)   # Soft-DTW loss function
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005)
 
     # Record loss and accuracy for every epoch.
@@ -113,8 +118,10 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
             mask = torch.arange(max_len)[None, :] < lengths[:, None]
             mask = mask.unsqueeze(-1).expand_as(u_batch)
 
+            # Compute the loss using criterion above
             loss = criterion(u_pred, u_batch)
-            loss = loss[mask].mean()
+            # loss = loss[mask].mean()    # For MSE loss
+            loss = loss.mean()    # For Soft-DTW loss
 
             loss.backward()     # Compute gradients
             optimizer.step()    # Update the model weights
@@ -126,16 +133,23 @@ if __name__ == "__main__":  # Ensures that training is not performed when import
 
     # Plot the loss across epochs
     plt.figure(figsize=(8, 3))
-    plt.plot(all_train_loss, "o-", c="tab:red")
-    plt.title("Loss")
-    plt.xlabel("Epochs")
+    plt.plot(all_train_loss, "o-", color="tab:red", label="Training Loss")
+    plt.title("Training Loss over Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.yscale("log")  # Set y-axis to logarithmic scale
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
     # Save the model parameters
+    output_file_path = "model_parameters_lstm.pth"
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'training_loss': all_train_loss,
         'epoch': epoch
-    }, "model_checkpoint_lstm.pth")
+    }, output_file_path)
+    print(f"Saved model parameters to {output_file_path}")
+    print(f"Final training loss: {all_train_loss[-1]}")
